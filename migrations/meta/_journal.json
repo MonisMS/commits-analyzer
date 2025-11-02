@@ -15,6 +15,20 @@
       "when": 1762003654584,
       "tag": "0001_next_lenny_balinger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762092858365,
+      "tag": "0002_salty_ego",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1762094023380,
+      "tag": "0003_reflective_justin_hammer",
+      "breakpoints": true
     }
   ]
 }

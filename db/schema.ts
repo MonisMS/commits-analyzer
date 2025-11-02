@@ -1,6 +1,6 @@
 
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean,integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer, jsonb, unique, uuid } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -65,7 +65,7 @@ export const verification = pgTable("verification", {
 });
 
 export const repositories = pgTable("repositories", {
-  id: text("id").primaryKey(),
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   githubRepoId: integer("github_repo_id").notNull(),
   name: text("name").notNull(),
@@ -74,10 +74,12 @@ export const repositories = pgTable("repositories", {
   language: text("language"),
   lastSyncAt: timestamp("last_sync_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  uniqueUserRepo: unique().on(table.userId, table.githubRepoId),
+}));
 
 export const commits = pgTable("commits", {
-  id: text("id").primaryKey(),
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   repositoryId: text("repository_id").notNull().references(() => repositories.id, { onDelete: "cascade" }),
   githubCommitSha: text("github_commit_sha").notNull(),
@@ -90,7 +92,9 @@ export const commits = pgTable("commits", {
   additions: integer("additions").notNull(),
   deletions: integer("deletions").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  uniqueRepoCommit: unique().on(table.repositoryId, table.githubCommitSha),
+}));
 
 export const analyticsCache = pgTable("analytics_cache", {
   id: text("id").primaryKey(),

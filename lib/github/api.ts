@@ -103,7 +103,7 @@ export async function getUserRepositories(
       cursor = result.viewer.repositories.pageInfo.endCursor;
 
       // Stop if we have enough repos or if no repos in last 60 days
-      if (allRepos.length >= 200 || repos.length === 0) break;
+      if (allRepos.length >= 200 || repos.length === 0) return;
     }
 
     console.log(
@@ -148,13 +148,6 @@ export async function getRepositoryCommits(
                     additions
                     deletions
                     changedFilesIfAvailable
-                    files(first: 100) {
-                      nodes {
-                        path
-                        additions
-                        deletions
-                      }
-                    }
                   }
                 }
               }
@@ -192,17 +185,10 @@ export async function getRepositoryCommits(
         authorName: commit.author?.name || "Unknown",
         authorEmail: commit.author?.email || "",
         committedAt: new Date(commit.committedDate),
-        filesChanged:
-          commit.changedFilesIfAvailable || commit.files?.nodes?.length || 0,
+        filesChanged: commit.changedFilesIfAvailable || 0,
         additions: commit.additions || 0,
         deletions: commit.deletions || 0,
-        files:
-          commit.files?.nodes?.map((file: any) => ({
-            filename: file.path,
-            status: "modified",
-            additions: file.additions || 0,
-            deletions: file.deletions || 0,
-          })) || [],
+        files: [], // Files not available in history query
       }));
 
       allCommits = [...allCommits, ...commits];

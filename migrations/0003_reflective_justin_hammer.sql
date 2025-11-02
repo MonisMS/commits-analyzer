@@ -1,0 +1,2 @@
+ALTER TABLE "commits" ADD CONSTRAINT "commits_repository_id_github_commit_sha_unique" UNIQUE("repository_id","github_commit_sha");--> statement-breakpoint
+ALTER TABLE "repositories" ADD CONSTRAINT "repositories_user_id_github_repo_id_unique" UNIQUE("user_id","github_repo_id");

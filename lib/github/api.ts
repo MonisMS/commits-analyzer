@@ -1,6 +1,12 @@
 import { RateLimit } from "better-auth";
 import { createGithubClient } from "./client";
-import { Commit, GitHubUser, RateLimitInfo, RateLimitQueryResult, Repository } from "./types";
+import {
+  Commit,
+  GitHubUser,
+  RateLimitInfo,
+  RateLimitQueryResult,
+  Repository,
+} from "./types";
 
 export async function checkRateLimit(
   accessToken: string
@@ -17,7 +23,7 @@ export async function checkRateLimit(
         cost 
         
         }}`;
-    const result = await client(query) as RateLimitQueryResult;
+    const result = (await client(query)) as RateLimitQueryResult;
 
     return {
       remaining: result.rateLimit.remaining,
@@ -32,15 +38,15 @@ export async function checkRateLimit(
   }
 }
 
+export async function getUserRepositories(
+  accessToken: string
+): Promise<Repository[]> {
+  try {
+    const client = createGithubClient(accessToken);
 
-export async function getUserRepositories(accessToken:string ) : Promise<Repository[]>
-{
-    try {
-        const client =  createGithubClient(accessToken);
-
-        const sixtyDaysAgo = new Date();
-        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-        const query = `
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    const query = `
         
          query($cursor: String) {
         viewer {
@@ -71,30 +77,28 @@ export async function getUserRepositories(accessToken:string ) : Promise<Reposit
       }
     `;
 
-
     let allRepos: Repository[] = [];
     let hasNextPage = true;
     let cursor: string | null = null;
 
+    if (hasNextPage && allRepos.length < 200) {
+      const result = await client(query, { cursor });
 
-    if(hasNextPage && allRepos.length < 200){
-        const result = await client(query,{cursor}) 
-
-        const repos = result.viewer.repositories.nodes 
-        .filter((repo) =>{
-            const repoUpdateAt = new Date(repo.updatedAt);
-            return repoUpdateAt >= sixtyDaysAgo;
+      const repos = result.viewer.repositories.nodes
+        .filter((repo) => {
+          const repoUpdateAt = new Date(repo.updatedAt);
+          return repoUpdateAt >= sixtyDaysAgo;
         })
         .map((repo) => ({
-            id: repo.databaseId,
-            name: repo.name,
-            fullName: repo.nameWithOwner,
-            private: repo.isPrivate,
-            language: repo.primaryLanguage?.name || null,
-            updatedAt: repo.updatedAt,
-            owner: repo.owner.login,
+          id: repo.databaseId,
+          name: repo.name,
+          fullName: repo.nameWithOwner,
+          private: repo.isPrivate,
+          language: repo.primaryLanguage?.name || null,
+          updatedAt: repo.updatedAt,
+          owner: repo.owner.login,
         }));
-   allRepos = [...allRepos, ...repos];
+      allRepos = [...allRepos, ...repos];
       hasNextPage = result.viewer.repositories.pageInfo.hasNextPage;
       cursor = result.viewer.repositories.pageInfo.endCursor;
 
@@ -102,11 +106,13 @@ export async function getUserRepositories(accessToken:string ) : Promise<Reposit
       if (allRepos.length >= 200 || repos.length === 0) break;
     }
 
-    console.log(`Found ${allRepos.length} repositories updated in last 60 days`);
+    console.log(
+      `Found ${allRepos.length} repositories updated in last 60 days`
+    );
     return allRepos;
   } catch (error) {
-    console.error('Error fetching repositories:', error);
-    throw new Error('Failed to fetch repositories');
+    console.error("Error fetching repositories:", error);
+    throw new Error("Failed to fetch repositories");
   }
 }
 
@@ -119,7 +125,7 @@ export async function getRepositoryCommits(
   try {
     const client = createGithubClient(accessToken);
     const sinceDate = since?.toISOString();
-    
+
     const query = `
       query($owner: String!, $name: String!, $since: GitTimestamp, $cursor: String) {
         repository(owner: $owner, name: $name) {
@@ -172,8 +178,9 @@ export async function getRepositoryCommits(
         cursor,
       });
 
-      const commitHistory = result.repository?.defaultBranchRef?.target?.history;
-      
+      const commitHistory =
+        result.repository?.defaultBranchRef?.target?.history;
+
       if (!commitHistory) {
         console.warn(`No commit history found for ${owner}/${repo}`);
         break;
@@ -182,18 +189,20 @@ export async function getRepositoryCommits(
       const commits = commitHistory.nodes.map((commit: any) => ({
         sha: commit.oid,
         message: commit.message,
-        authorName: commit.author?.name || 'Unknown',
-        authorEmail: commit.author?.email || '',
+        authorName: commit.author?.name || "Unknown",
+        authorEmail: commit.author?.email || "",
         committedAt: new Date(commit.committedDate),
-        filesChanged: commit.changedFilesIfAvailable || commit.files?.nodes?.length || 0,
+        filesChanged:
+          commit.changedFilesIfAvailable || commit.files?.nodes?.length || 0,
         additions: commit.additions || 0,
         deletions: commit.deletions || 0,
-        files: commit.files?.nodes?.map((file: any) => ({
-          filename: file.path,
-          status: 'modified',
-          additions: file.additions || 0,
-          deletions: file.deletions || 0,
-        })) || [],
+        files:
+          commit.files?.nodes?.map((file: any) => ({
+            filename: file.path,
+            status: "modified",
+            additions: file.additions || 0,
+            deletions: file.deletions || 0,
+          })) || [],
       }));
 
       allCommits = [...allCommits, ...commits];
@@ -202,7 +211,9 @@ export async function getRepositoryCommits(
       pageCount++;
     }
 
-    console.log(`Fetched ${allCommits.length} commits from ${owner}/${repo} (${pageCount} pages)`);
+    console.log(
+      `Fetched ${allCommits.length} commits from ${owner}/${repo} (${pageCount} pages)`
+    );
     return allCommits;
   } catch (error) {
     console.error(`Error fetching commits for ${owner}/${repo}:`, error);
@@ -231,7 +242,9 @@ export async function getUserCommits(
   const maxRepos = 10;
   const reposToProcess = repositories.slice(0, maxRepos);
 
-  console.log(`Processing ${reposToProcess.length} of ${repositories.length} repositories`);
+  console.log(
+    `Processing ${reposToProcess.length} of ${repositories.length} repositories`
+  );
 
   const results: { repo: Repository; commits: Commit[] }[] = [];
 
@@ -240,19 +253,24 @@ export async function getUserCommits(
       // Check rate limit before each repo
       const currentRateLimit = await checkRateLimit(accessToken);
       if (currentRateLimit && currentRateLimit.remaining < 200) {
-        console.warn('Rate limit too low, stopping sync');
+        console.warn("Rate limit too low, stopping sync");
         break;
       }
 
-      const [owner, repoName] = repo.fullName.split('/');
-      const commits = await getRepositoryCommits(accessToken, owner, repoName, since);
-      
+      const [owner, repoName] = repo.fullName.split("/");
+      const commits = await getRepositoryCommits(
+        accessToken,
+        owner,
+        repoName,
+        since
+      );
+
       if (commits.length > 0) {
         results.push({ repo, commits });
       }
 
       // Small delay to avoid hitting rate limits
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     } catch (error) {
       console.warn(`Skipping repository ${repo.fullName} due to error:`, error);
       // Continue with other repositories
@@ -281,7 +299,7 @@ export async function getViewer(accessToken: string): Promise<GitHubUser> {
     const result: any = await client(query);
     return result.viewer;
   } catch (error) {
-    console.error('Error fetching viewer:', error);
-    throw new Error('Failed to fetch user information');
+    console.error("Error fetching viewer:", error);
+    throw new Error("Failed to fetch user information");
   }
 }

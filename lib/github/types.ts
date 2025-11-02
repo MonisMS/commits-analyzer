@@ -1,3 +1,5 @@
+import { int } from "better-auth";
+
 export interface RateLimitInfo {
     remaining: number;
     reset: Date;
@@ -15,4 +17,42 @@ export interface RateLimitQueryResult {
     used: number;
     cost: number;
   };
+}
+
+export interface Repository {
+    id: number,
+    name: string,
+    fullName: string,
+    private: boolean,
+    language: string | null,
+    updatedAt: string,
+    owner: string,
+}
+
+export interface Commit {
+     sha: string;
+  message: string;
+  authorName: string;
+  authorEmail: string;
+  committedAt: Date;
+  filesChanged: number;
+  additions: number;
+  deletions: number;
+  files: CommitFile[];
+}
+
+
+export interface CommitFile {
+     filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+}
+
+export interface GitHubUser {
+  login: string;
+  name: string | null;
+  email: string | null;
+  avatarUrl: string;
+  bio: string | null;
 }

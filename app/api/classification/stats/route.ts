@@ -1,7 +1,10 @@
 import { getServerUser } from "@/lib/auth";
 import { getClassificationStats } from "@/lib/classification/service";
-import { error } from "console";
 import { NextResponse } from "next/server";
+
+// Force dynamic rendering - this route requires authentication and database access
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET() {
     try {

@@ -4,6 +4,9 @@ import { syncUserData } from "@/lib/github/sync";
 import { NextResponse } from "next/server";
 import { cache } from "@/lib/cache/cache";
 
+// Force dynamic rendering - this route requires authentication and database access
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST() {
     try {

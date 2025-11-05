@@ -4,6 +4,10 @@ import { getServerUser } from '@/lib/auth';
 import { classifyUserCommits } from '@/lib/classification/service';
 import { cache } from '@/lib/cache/cache';
 
+// Force dynamic rendering - this route requires authentication and database access
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST() {
   try {
     const user = await getServerUser();

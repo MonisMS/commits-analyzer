@@ -9,6 +9,10 @@ import {
 } from '@/lib/analytics/service';
 import { cache, CACHE_KEYS } from '@/lib/cache/cache';
 
+// Force dynamic rendering - this route requires authentication and database access
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     // Check authentication

@@ -1,5 +1,3 @@
-import { int } from "better-auth";
-
 export interface RateLimitInfo {
     remaining: number;
     reset: Date;
@@ -16,6 +14,67 @@ export interface RateLimitQueryResult {
     resetAt: string;
     used: number;
     cost: number;
+  };
+}
+
+export interface RepositoriesQueryResult {
+  viewer: {
+    repositories: {
+      pageInfo: {
+        hasNextPage: boolean;
+        endCursor: string | null;
+      };
+      nodes: Array<{
+        databaseId: number;
+        name: string;
+        nameWithOwner: string;
+        isPrivate: boolean;
+        primaryLanguage: {
+          name: string;
+        } | null;
+        updatedAt: string;
+        owner: {
+          login: string;
+        };
+      }>;
+    };
+  };
+}
+
+export interface CommitHistoryQueryResult {
+  repository: {
+    defaultBranchRef: {
+      target: {
+        history: {
+          pageInfo: {
+            hasNextPage: boolean;
+            endCursor: string | null;
+          };
+          nodes: Array<{
+            oid: string;
+            message: string;
+            committedDate: string;
+            author: {
+              name: string;
+              email: string;
+            };
+            additions: number;
+            deletions: number;
+            changedFilesIfAvailable: number;
+          }>;
+        };
+      };
+    } | null;
+  };
+}
+
+export interface ViewerQueryResult {
+  viewer: {
+    login: string;
+    name: string | null;
+    email: string | null;
+    avatarUrl: string;
+    bio: string | null;
   };
 }
 

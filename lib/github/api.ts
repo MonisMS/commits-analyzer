@@ -1,4 +1,3 @@
-import { RateLimit } from "better-auth";
 import { createGithubClient } from "./client";
 import {
   Commit,
@@ -6,6 +5,9 @@ import {
   RateLimitInfo,
   RateLimitQueryResult,
   Repository,
+  RepositoriesQueryResult,
+  CommitHistoryQueryResult,
+  ViewerQueryResult,
 } from "./types";
 
 export async function checkRateLimit(
@@ -82,7 +84,7 @@ export async function getUserRepositories(
     let cursor: string | null = null;
 
     if (hasNextPage && allRepos.length < 200) {
-      const result = await client(query, { cursor });
+      const result = (await client(query, { cursor })) as RepositoriesQueryResult;
 
       const repos = result.viewer.repositories.nodes
         .filter((repo) => {
@@ -103,7 +105,9 @@ export async function getUserRepositories(
       cursor = result.viewer.repositories.pageInfo.endCursor;
 
       // Stop if we have enough repos or if no repos in last 60 days
-      if (allRepos.length >= 200 || repos.length === 0) return;
+      if (allRepos.length >= 200 || repos.length === 0) {
+        hasNextPage = false;
+      }
     }
 
     console.log(
@@ -164,12 +168,12 @@ export async function getRepositoryCommits(
     const maxPages = 3;
 
     while (hasNextPage && pageCount < maxPages) {
-      const result: any = await client(query, {
+      const result = (await client(query, {
         owner,
         name: repo,
         since: sinceDate,
         cursor,
-      });
+      })) as CommitHistoryQueryResult;
 
       const commitHistory =
         result.repository?.defaultBranchRef?.target?.history;
@@ -179,7 +183,7 @@ export async function getRepositoryCommits(
         break;
       }
 
-      const commits = commitHistory.nodes.map((commit: any) => ({
+      const commits = commitHistory.nodes.map((commit) => ({
         sha: commit.oid,
         message: commit.message,
         authorName: commit.author?.name || "Unknown",
@@ -282,7 +286,7 @@ export async function getViewer(accessToken: string): Promise<GitHubUser> {
       }
     `;
 
-    const result: any = await client(query);
+    const result = (await client(query)) as ViewerQueryResult;
     return result.viewer;
   } catch (error) {
     console.error("Error fetching viewer:", error);

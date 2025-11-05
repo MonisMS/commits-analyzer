@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SyncButton } from "@/components/syncButton";
 import { ClassifyButton } from "@/components/classifyButton";
 import { AnalyticsDashboard } from "@/components/dashboard/analytics-dashboard";
+import { SignOutButton } from "@/components/sign-out-button";
 
 export default async function DashboardPage() {
   const user = await getServerUser();
@@ -15,9 +16,12 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user.name}!</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {user.name}!</p>
+          </div>
+          <SignOutButton />
         </div>
 
         <div className="space-y-6">

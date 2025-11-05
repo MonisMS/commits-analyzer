@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getServerUser } from '@/lib/auth';
 import { classifyUserCommits } from '@/lib/classification/service';
+import { cache } from '@/lib/cache/cache';
 
 export async function POST() {
   try {
@@ -11,7 +12,8 @@ export async function POST() {
     }
 
     const result = await classifyUserCommits(user.id);
-
+cache.deleteUserData(user.id);
+console.log('🗑️  Cache invalidated for user after classification');
     return NextResponse.json({
       success: true,
       data: result,

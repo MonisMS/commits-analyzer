@@ -7,6 +7,7 @@ import {
   getCommitStats,
   getTopRepositories,
 } from '@/lib/analytics/service';
+import { cache, CACHE_KEYS } from '@/lib/cache/cache';
 
 export async function GET() {
   try {
@@ -15,6 +16,21 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Try to get from cache first
+    const cacheKey = CACHE_KEYS.ANALYTICS_OVERVIEW(user.id);
+    const cached = cache.get(cacheKey);
+    
+    if (cached) {
+      console.log('📦 Cache HIT for analytics overview');
+      return NextResponse.json({
+        success: true,
+        data: cached,
+        cached: true,
+      });
+    }
+
+    console.log('💾 Cache MISS - fetching from database');
 
     // Fetch all analytics data in parallel for better performance
     const [
@@ -31,15 +47,21 @@ export async function GET() {
       getTopRepositories(user.id),
     ]);
 
+    const data = {
+      commitTypes,
+      commitsOverTime,
+      activityHeatmap,
+      commitStats,
+      topRepositories,
+    };
+
+    // Store in cache for 5 minutes
+    cache.set(cacheKey, data, 300);
+
     return NextResponse.json({
       success: true,
-      data: {
-        commitTypes,
-        commitsOverTime,
-        activityHeatmap,
-        commitStats,
-        topRepositories,
-      },
+      data,
+      cached: false,
     });
   } catch (error) {
     console.error('Analytics overview error:', error);

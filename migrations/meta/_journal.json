@@ -3,10 +3,10 @@
   "dialect": "postgresql",
   "entries": [
     {
-      "idx": 0,
-      "version": "7",
-      "when": 1761994534449,
-      "tag": "0000_right_molten_man",
+      "idx": 4,
+      "version": "6",
+      "when": 1699209600000,
+      "tag": "0004_add_performance_indexes",
       "breakpoints": true
     },
     {

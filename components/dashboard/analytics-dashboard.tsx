@@ -1,7 +1,8 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 import { CommitTypePieChart } from './charts/commit-type-pie-chart';
 import { CommitsOverTimeChart } from './charts/commits-over-time-chart';
 import { ActivityHeatmap } from './charts/activity-heatmap';
@@ -20,18 +21,30 @@ export function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchAnalyticsData();
   }, []);
 
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = async (force: boolean = false) => {
     try {
-      const response = await fetch('/api/analytics/overview');
+      if (force) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      
+      const url = force 
+        ? '/api/analytics/overview?force=true' 
+        : '/api/analytics/overview';
+      
+      const response = await fetch(url);
       const result = await response.json();
 
       if (response.ok) {
         setData(result.data);
+        setError(null);
       } else {
         setError(result.error || 'Failed to fetch analytics data');
       }
@@ -39,7 +52,12 @@ export function AnalyticsDashboard() {
       setError('Network error occurred');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    fetchAnalyticsData(true);
   };
 
   if (loading) {
@@ -80,7 +98,11 @@ export function AnalyticsDashboard() {
           <CardTitle>Error Loading Analytics</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-red-600">{error}</p>
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={handleRefresh} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     );
@@ -93,7 +115,7 @@ export function AnalyticsDashboard() {
           <CardTitle>No Data Available</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-4">
             Sync your GitHub data and classify commits to see analytics.
           </p>
         </CardContent>
@@ -103,6 +125,19 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Add refresh button */}
+      <div className="flex justify-end">
+        <Button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          variant="outline"
+          size="sm"
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Refreshing...' : 'Refresh Data'}
+        </Button>
+      </div>
+
       <StatsCards
         commitStats={data.commitStats}
         topRepositories={data.topRepositories}

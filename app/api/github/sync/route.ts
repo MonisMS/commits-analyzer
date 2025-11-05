@@ -1,10 +1,11 @@
 import { getServerUser } from "@/lib/auth";
 import { getGitHubToken } from "@/lib/db/queries";
 import { syncUserData } from "@/lib/github/sync";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { cache } from "@/lib/cache/cache";
 
 
-export async function POST(request: NextRequest) {
+export async function POST() {
     try {
         const user = await getServerUser()
         if (!user) {
@@ -17,7 +18,8 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await syncUserData(githubToken, user.id, 30)
-
+cache.deleteUserData(user.id);
+    console.log('🗑️  Cache invalidated for user after sync');
 return NextResponse.json({
       success: true,
       data: result,

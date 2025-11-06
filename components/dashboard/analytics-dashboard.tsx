@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { CommitTypePieChart } from './charts/commit-type-pie-chart';
 import { CommitsOverTimeChart } from './charts/commits-over-time-chart';
-import { ActivityHeatmap } from './charts/activity-heatmap';
+import { WeeklyPatternChart } from './charts/weekly-pattern-chart';
+import { DailyActivityPattern } from './charts/daily-activity-pattern';
+import { RepositoryComparisonChart } from './charts/repository-comparison-chart';
 import { StatsCards } from './stats-cards';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -15,6 +17,14 @@ interface AnalyticsData {
   activityHeatmap: any[];
   commitStats: any;
   topRepositories: any[];
+  commitComparison: any;
+  contributionStreak: any;
+  repositoryStats: any;
+  productivityStats: any;
+  commitFrequencyStats: any;
+  languageStats: any[];
+  weeklyPattern: any[];
+  hourlyPattern: any[];
 }
 
 export function AnalyticsDashboard() {
@@ -62,27 +72,29 @@ export function AnalyticsDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in fade-in-50 duration-700">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+          {[...Array(8)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
               <CardHeader>
-                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-32 bg-gradient-to-r from-gray-200 to-gray-300" />
               </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16" />
+              <CardContent className="space-y-2">
+                <Skeleton className="h-10 w-24 bg-gradient-to-r from-gray-200 to-gray-300" />
+                <Skeleton className="h-3 w-40 bg-gradient-to-r from-gray-200 to-gray-300" />
               </CardContent>
             </Card>
           ))}
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className={`animate-pulse ${i === 3 ? 'lg:col-span-2' : ''}`}>
               <CardHeader>
-                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-6 w-32 bg-gradient-to-r from-gray-200 to-gray-300" />
+                <Skeleton className="h-4 w-48 bg-gradient-to-r from-gray-200 to-gray-300 mt-2" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-80 w-full" />
+                <Skeleton className="h-80 w-full bg-gradient-to-r from-gray-200 to-gray-300" />
               </CardContent>
             </Card>
           ))}
@@ -124,14 +136,23 @@ export function AnalyticsDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in-50 duration-700">
       {/* Add refresh button */}
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Analytics Overview
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Your coding insights at a glance
+          </p>
+        </div>
         <Button
           onClick={handleRefresh}
           disabled={refreshing}
           variant="outline"
           size="sm"
+          className="hover:scale-105 transition-all duration-300 hover:shadow-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
         >
           <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing...' : 'Refresh Data'}
@@ -141,12 +162,19 @@ export function AnalyticsDashboard() {
       <StatsCards
         commitStats={data.commitStats}
         topRepositories={data.topRepositories}
+        commitComparison={data.commitComparison}
+        contributionStreak={data.contributionStreak}
+        repositoryStats={data.repositoryStats}
+        productivityStats={data.productivityStats}
+        commitFrequencyStats={data.commitFrequencyStats}
+        languageStats={data.languageStats}
       />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Commit Types */}
+        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
           <CardHeader>
-            <CardTitle>Commit Types</CardTitle>
+            <CardTitle className="group-hover:text-blue-600 transition-colors">Commit Types</CardTitle>
             <CardDescription>
               Distribution of commits by category
             </CardDescription>
@@ -156,11 +184,38 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Weekly Pattern */}
+        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
           <CardHeader>
-            <CardTitle>Commits Over Time</CardTitle>
+            <CardTitle className="group-hover:text-blue-600 transition-colors">Weekly Pattern</CardTitle>
             <CardDescription>
-              Daily commit activity for the last 30 days
+              Activity by day of the week
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <WeeklyPatternChart data={data.weeklyPattern} />
+          </CardContent>
+        </Card>
+
+        {/* Repository Comparison */}
+        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+          <CardHeader>
+            <CardTitle className="group-hover:text-blue-600 transition-colors">Top Repositories</CardTitle>
+            <CardDescription>
+              Commits by repository
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RepositoryComparisonChart data={data.topRepositories} />
+          </CardContent>
+        </Card>
+
+        {/* Commits Over Time */}
+        <Card className="lg:col-span-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+          <CardHeader>
+            <CardTitle className="group-hover:text-blue-600 transition-colors">Commits Over Time</CardTitle>
+            <CardDescription>
+              Daily activity for the last 30 days
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -168,15 +223,16 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        {/* Daily Activity Pattern */}
+        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
           <CardHeader>
-            <CardTitle>Activity Heatmap</CardTitle>
+            <CardTitle className="group-hover:text-blue-600 transition-colors">Daily Activity</CardTitle>
             <CardDescription>
-              Commit activity by hour and day of week
+              24-hour coding pattern
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ActivityHeatmap data={data.activityHeatmap} />
+            <DailyActivityPattern data={data.hourlyPattern} />
           </CardContent>
         </Card>
       </div>

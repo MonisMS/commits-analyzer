@@ -6,6 +6,14 @@ import {
   getActivityHeatmap,
   getCommitStats,
   getTopRepositories,
+  getCommitComparison,
+  getContributionStreak,
+  getRepositoryStats,
+  getProductivityStats,
+  getCommitFrequencyStats,
+  getLanguageStats,
+  getWeeklyPattern,
+  getHourlyPattern,
 } from '@/lib/analytics/service';
 import { cache, CACHE_KEYS } from '@/lib/cache/cache';
 
@@ -43,12 +51,28 @@ export async function GET() {
       activityHeatmap,
       commitStats,
       topRepositories,
+      commitComparison,
+      contributionStreak,
+      repositoryStats,
+      productivityStats,
+      commitFrequencyStats,
+      languageStats,
+      weeklyPattern,
+      hourlyPattern,
     ] = await Promise.all([
       getCommitTypeDistribution(user.id),
       getCommitsOverTime(user.id),
       getActivityHeatmap(user.id),
       getCommitStats(user.id),
       getTopRepositories(user.id),
+      getCommitComparison(user.id),
+      getContributionStreak(user.id),
+      getRepositoryStats(user.id),
+      getProductivityStats(user.id),
+      getCommitFrequencyStats(user.id),
+      getLanguageStats(user.id),
+      getWeeklyPattern(user.id),
+      getHourlyPattern(user.id),
     ]);
 
     const data = {
@@ -57,6 +81,14 @@ export async function GET() {
       activityHeatmap,
       commitStats,
       topRepositories,
+      commitComparison,
+      contributionStreak,
+      repositoryStats,
+      productivityStats,
+      commitFrequencyStats,
+      languageStats,
+      weeklyPattern,
+      hourlyPattern,
     };
 
     // Store in cache for 5 minutes

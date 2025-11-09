@@ -12,6 +12,38 @@ interface DailyActivityPatternProps {
   data: HourlyActivityData[];
 }
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    payload: HourlyActivityData;
+  }>;
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  if (active && payload && payload.length) {
+    const hourNum = payload[0].payload.hourNum;
+    const formatHour = (h: number) => {
+      if (h === 0) return '12 AM';
+      if (h === 12) return '12 PM';
+      return h > 12 ? `${h - 12} PM` : `${h} AM`;
+    };
+
+    return (
+      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <p className="font-semibold">{formatHour(hourNum)}</p>
+        <p className="text-sm text-gray-600">
+          {payload[0].value} {payload[0].value === 1 ? 'commit' : 'commits'}
+        </p>
+        <p className="text-xs text-gray-500 mt-1">
+          {hourNum < 12 ? 'Morning' : hourNum < 17 ? 'Afternoon' : 'Evening'}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function DailyActivityPattern({ data }: DailyActivityPatternProps) {
   // Get color based on commit count (heatmap style)
   const getColor = (commits: number, maxCommits: number) => {
@@ -24,30 +56,6 @@ export function DailyActivityPattern({ data }: DailyActivityPatternProps) {
   };
 
   const maxCommits = Math.max(...data.map(d => d.commits), 1);
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const hourNum = payload[0].payload.hourNum;
-      const formatHour = (h: number) => {
-        if (h === 0) return '12 AM';
-        if (h === 12) return '12 PM';
-        return h > 12 ? `${h - 12} PM` : `${h} AM`;
-      };
-
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold">{formatHour(hourNum)}</p>
-          <p className="text-sm text-gray-600">
-            {payload[0].value} {payload[0].value === 1 ? 'commit' : 'commits'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {hourNum < 12 ? 'Morning' : hourNum < 17 ? 'Afternoon' : 'Evening'}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-4">

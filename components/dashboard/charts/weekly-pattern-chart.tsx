@@ -11,6 +11,28 @@ interface WeeklyPatternChartProps {
   data: WeeklyPatternData[];
 }
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    payload: WeeklyPatternData;
+  }>;
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <p className="font-semibold">{payload[0].payload.day}</p>
+        <p className="text-sm text-gray-600">
+          {payload[0].value} {payload[0].value === 1 ? 'commit' : 'commits'}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function WeeklyPatternChart({ data }: WeeklyPatternChartProps) {
   // Get color based on commit count
   const getColor = (commits: number) => {
@@ -19,20 +41,6 @@ export function WeeklyPatternChart({ data }: WeeklyPatternChartProps) {
     if (commits < 10) return '#60A5FA'; // Medium blue
     if (commits < 20) return '#3B82F6'; // Blue
     return '#2563EB'; // Dark blue
-  };
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold">{payload[0].payload.day}</p>
-          <p className="text-sm text-gray-600">
-            {payload[0].value} {payload[0].value === 1 ? 'commit' : 'commits'}
-          </p>
-        </div>
-      );
-    }
-    return null;
   };
 
   return (

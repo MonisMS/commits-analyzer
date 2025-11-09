@@ -11,20 +11,95 @@ import { RepositoryComparisonChart } from './charts/repository-comparison-chart'
 import { StatsCards } from './stats-cards';
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface CommitType {
+  type: string;
+  count: number;
+  percentage: number;
+}
+
+interface CommitOverTime {
+  date: string;
+  commits: number;
+}
+
+interface CommitStats {
+  totalCommits: number;
+  totalAdditions: number;
+  totalDeletions: number;
+  avgFilesChanged: number;
+  firstCommit: Date | null;
+  lastCommit: Date | null;
+}
+
+interface TopRepository {
+  repositoryName: string;
+  commitCount: number;
+  totalAdditions: number;
+  totalDeletions: number;
+}
+
+interface CommitComparison {
+  currentPeriod: number;
+  previousPeriod: number;
+  percentageChange: number;
+}
+
+interface ContributionStreak {
+  currentStreak: number;
+  longestStreak: number;
+  lastCommitDate: string;
+}
+
+interface RepositoryStats {
+  totalRepositories: number;
+  mostActiveRepo: string;
+  mostActiveRepoCommits: number;
+}
+
+interface ProductivityStats {
+  mostProductiveDay: string;
+  mostProductiveDayCount: number;
+  mostProductiveHour: number;
+  mostProductiveHourCount: number;
+}
+
+interface CommitFrequencyStats {
+  avgCommitsPerDay: number;
+  mostActiveMonth: string;
+  mostActiveMonthCount: number;
+  consistencyScore: number;
+}
+
+interface LanguageStat {
+  language: string;
+  count: number;
+  percentage: number;
+}
+
+interface WeeklyPattern {
+  day: string;
+  commits: number;
+}
+
+interface HourlyPattern {
+  hour: number;
+  commits: number;
+}
+
 interface AnalyticsData {
-  commitTypes: any[];
-  commitsOverTime: any[];
-  activityHeatmap: any[];
-  commitStats: any;
-  topRepositories: any[];
-  commitComparison: any;
-  contributionStreak: any;
-  repositoryStats: any;
-  productivityStats: any;
-  commitFrequencyStats: any;
-  languageStats: any[];
-  weeklyPattern: any[];
-  hourlyPattern: any[];
+  commitTypes: CommitType[];
+  commitsOverTime: CommitOverTime[];
+  activityHeatmap: unknown[];
+  commitStats: CommitStats;
+  topRepositories: TopRepository[];
+  commitComparison: CommitComparison;
+  contributionStreak: ContributionStreak;
+  repositoryStats: RepositoryStats;
+  productivityStats: ProductivityStats;
+  commitFrequencyStats: CommitFrequencyStats;
+  languageStats: LanguageStat[];
+  weeklyPattern: WeeklyPattern[];
+  hourlyPattern: HourlyPattern[];
 }
 
 export function AnalyticsDashboard() {
@@ -32,6 +107,17 @@ export function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  const getCommitTypeColor = (type: string): string => {
+    const colors: Record<string, string> = {
+      'Frontend': '#3b82f6',
+      'Backend': '#10b981',
+      'Configuration': '#f59e0b',
+      'Documentation': '#8b5cf6',
+      'Other': '#6b7280',
+    };
+    return colors[type] || '#6b7280';
+  };
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -58,7 +144,7 @@ export function AnalyticsDashboard() {
       } else {
         setError(result.error || 'Failed to fetch analytics data');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     } finally {
       setLoading(false);
@@ -140,10 +226,10 @@ export function AnalyticsDashboard() {
       {/* Add refresh button */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold tracking-tight text-white">
             Analytics Overview
           </h2>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-gray-400 mt-1">
             Your coding insights at a glance
           </p>
         </div>
@@ -152,7 +238,7 @@ export function AnalyticsDashboard() {
           disabled={refreshing}
           variant="outline"
           size="sm"
-          className="hover:scale-105 transition-all duration-300 hover:shadow-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+          className="border-gray-700 bg-[#0f1d35] text-gray-300 hover:bg-blue-500/10 hover:border-blue-500/50 hover:text-blue-400 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-300"
         >
           <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing...' : 'Refresh Data'}
@@ -161,7 +247,6 @@ export function AnalyticsDashboard() {
 
       <StatsCards
         commitStats={data.commitStats}
-        topRepositories={data.topRepositories}
         commitComparison={data.commitComparison}
         contributionStreak={data.contributionStreak}
         repositoryStats={data.repositoryStats}
@@ -172,67 +257,85 @@ export function AnalyticsDashboard() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Commit Types */}
-        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-          <CardHeader>
-            <CardTitle className="group-hover:text-blue-600 transition-colors">Commit Types</CardTitle>
-            <CardDescription>
+        <Card className="group relative overflow-hidden bg-[#0f1d35] border-gray-800/50 hover:border-blue-500/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative z-10">
+            <CardTitle className="group-hover:text-blue-400 transition-colors text-white">Commit Types</CardTitle>
+            <CardDescription className="text-gray-400">
               Distribution of commits by category
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <CommitTypePieChart data={data.commitTypes} />
+          <CardContent className="relative z-10">
+            <CommitTypePieChart data={data.commitTypes.map(ct => ({
+              name: ct.type,
+              value: ct.count,
+              percentage: ct.percentage.toString(),
+              color: getCommitTypeColor(ct.type)
+            }))} />
           </CardContent>
         </Card>
 
         {/* Weekly Pattern */}
-        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-          <CardHeader>
-            <CardTitle className="group-hover:text-blue-600 transition-colors">Weekly Pattern</CardTitle>
-            <CardDescription>
+        <Card className="group relative overflow-hidden bg-[#0f1d35] border-gray-800/50 hover:border-blue-500/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative z-10">
+            <CardTitle className="group-hover:text-blue-400 transition-colors text-white">Weekly Pattern</CardTitle>
+            <CardDescription className="text-gray-400">
               Activity by day of the week
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             <WeeklyPatternChart data={data.weeklyPattern} />
           </CardContent>
         </Card>
 
         {/* Repository Comparison */}
-        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-          <CardHeader>
-            <CardTitle className="group-hover:text-blue-600 transition-colors">Top Repositories</CardTitle>
-            <CardDescription>
+        <Card className="group relative overflow-hidden bg-[#0f1d35] border-gray-800/50 hover:border-blue-500/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative z-10">
+            <CardTitle className="group-hover:text-blue-400 transition-colors text-white">Top Repositories</CardTitle>
+            <CardDescription className="text-gray-400">
               Commits by repository
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             <RepositoryComparisonChart data={data.topRepositories} />
           </CardContent>
         </Card>
 
         {/* Commits Over Time */}
-        <Card className="lg:col-span-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-          <CardHeader>
-            <CardTitle className="group-hover:text-blue-600 transition-colors">Commits Over Time</CardTitle>
-            <CardDescription>
+        <Card className="lg:col-span-2 group relative overflow-hidden bg-[#0f1d35] border-gray-800/50 hover:border-blue-500/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative z-10">
+            <CardTitle className="group-hover:text-blue-400 transition-colors text-white">Commits Over Time</CardTitle>
+            <CardDescription className="text-gray-400">
               Daily activity for the last 30 days
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <CommitsOverTimeChart data={data.commitsOverTime} />
+          <CardContent className="relative z-10">
+            <CommitsOverTimeChart data={data.commitsOverTime.map(ct => ({
+              date: new Date(ct.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              fullDate: ct.date,
+              commits: ct.commits
+            }))} />
           </CardContent>
         </Card>
 
         {/* Daily Activity Pattern */}
-        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-          <CardHeader>
-            <CardTitle className="group-hover:text-blue-600 transition-colors">Daily Activity</CardTitle>
-            <CardDescription>
+        <Card className="group relative overflow-hidden bg-[#0f1d35] border-gray-800/50 hover:border-blue-500/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="relative z-10">
+            <CardTitle className="group-hover:text-blue-400 transition-colors text-white">Daily Activity</CardTitle>
+            <CardDescription className="text-gray-400">
               24-hour coding pattern
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DailyActivityPattern data={data.hourlyPattern} />
+            <DailyActivityPattern data={data.hourlyPattern.map(hp => ({
+              hour: hp.hour === 0 ? '12a' : hp.hour < 12 ? `${hp.hour}a` : hp.hour === 12 ? '12p' : `${hp.hour - 12}p`,
+              commits: hp.commits,
+              hourNum: hp.hour
+            }))} />
           </CardContent>
         </Card>
       </div>
